@@ -22,3 +22,4 @@ public class SpinnerAdapter extends ArrayAdapter<String> {
         in.close();
     }
 }
+
