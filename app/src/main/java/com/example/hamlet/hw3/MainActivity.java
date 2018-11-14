@@ -2,18 +2,23 @@ package com.example.hamlet.hw3;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.os.Bundle;
-import android.util.Log;
+import android.preference.PreferenceManager;
+import android.support.v7.widget.Toolbar;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.*;
+import android.widget.SpinnerAdapter;
+import corn.hw.R;
+
+import java.io.IOException;
+import java.util.Timer;
 
 public class MainActivity extends Activity implements View.OnClickListener, RadioButton.OnCheckedChangeListener{
-
-    private VoteManager voteManager;
 
     private LinearLayout drink_food_layout;
     private EditText firstNameEditText;
@@ -24,12 +29,52 @@ public class MainActivity extends Activity implements View.OnClickListener, Radi
     private Spinner drinkSpinner;
     private Spinner foodSpinner;
 
-    private void init() {
-        LinearLayout root = new LinearLayout(this);
-        root.setOrientation(LinearLayout.VERTICAL);
+    public static final String TAG = MainActivity.class.getName();
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        initUI();
+        initComponents();
+
+        delete();
+    }
+
+    private void delete() {
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putInt("count", 0);
+        editor.commit();
+
+        VoteManager.count = 0;
+    }
+
+    private void initUI() {
+        LinearLayout rootLayout = new LinearLayout(this);
+        rootLayout.setOrientation(LinearLayout.VERTICAL);
         LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT);
-        root.setLayoutParams(params);
+        rootLayout.setLayoutParams(params);
+
+        Toolbar toolbar = new Toolbar(this);
+        params = new LinearLayout.LayoutParams
+                (ViewGroup.LayoutParams.MATCH_PARENT, 168);
+        toolbar.setLayoutParams(params);
+        toolbar.setTitle("Vote");
+        toolbar.setPopupTheme(R.style.AppTheme);
+        toolbar.setBackgroundColor(getResources().getColor(R.color.colorPrimary));
+        toolbar.setVisibility(View.VISIBLE);
+        toolbar.setTitleTextColor(Color.WHITE);
+        rootLayout.addView(toolbar, 0);
+
+        LinearLayout mainLayout = new LinearLayout(this);
+        mainLayout.setOrientation(LinearLayout.VERTICAL);
+        params = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT);
+        mainLayout.setPadding(20, 20, 20, 20);
+        mainLayout.setLayoutParams(params);
+        rootLayout.addView(mainLayout);
 
         TextView tv = new TextView(this);
         tv.setText("Will you come to the party? If you come what type of food and drink you want?");
@@ -38,7 +83,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Radi
                 LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
         params.setMargins(10, 10, 10, 10);
         tv.setLayoutParams(params);
-        root.addView(tv);
+        mainLayout.addView(tv);
 
         LinearLayout layout = new LinearLayout(this);
         layout.setOrientation(LinearLayout.HORIZONTAL);
@@ -60,26 +105,27 @@ public class MainActivity extends Activity implements View.OnClickListener, Radi
         lastNameEditText.setLayoutParams(params);
         layout.addView(lastNameEditText);
 
-        root.addView(layout);
+        mainLayout.addView(layout);
 
         RadioGroup radioGroup = new RadioGroup(this);
         radioGroup.setOrientation(RadioGroup.HORIZONTAL);
         params = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
         params.setMargins(10, 10, 10, 10);
+        params.gravity = Gravity.CENTER;
         radioGroup.setLayoutParams(params);
+
         agreeRBtn = new RadioButton(this);
         agreeRBtn.setText("Agree");
         agreeRBtn.setChecked(true);
         agreeRBtn.setId(0);
-        agreeRBtn.setLayoutParams(params);
         RadioButton disagreeRBtn = new RadioButton(this);
         disagreeRBtn.setText("Disagree");
-        disagreeRBtn.setLayoutParams(params);
         disagreeRBtn.setId(1);
-        radioGroup.addView(agreeRBtn);
-        radioGroup.addView(disagreeRBtn);
-        root.addView(radioGroup);
+
+        radioGroup.addView(agreeRBtn, params);
+        radioGroup.addView(disagreeRBtn, params);
+        mainLayout.addView(radioGroup);
 
         drink_food_layout = new LinearLayout(this);
         drink_food_layout.setOrientation(LinearLayout.VERTICAL);
@@ -118,7 +164,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Radi
         foodSpinner.setLayoutParams(params);
         drink_food_layout.addView(foodSpinner);
 
-        root.addView(drink_food_layout);
+        mainLayout.addView(drink_food_layout);
 
         voteBtn = new Button(this);
         voteBtn.setText("Vote");
@@ -128,36 +174,41 @@ public class MainActivity extends Activity implements View.OnClickListener, Radi
         params.width = LinearLayout.LayoutParams.WRAP_CONTENT;
         params.gravity = Gravity.CENTER;
         voteBtn.setLayoutParams(params);
-        root.addView(voteBtn);
+        mainLayout.addView(voteBtn);
 
         checkBtn = new Button(this);
         checkBtn.setText("Check votes");
         checkBtn.setLayoutParams(params);
-        root.addView(checkBtn);
+        mainLayout.addView(checkBtn);
 
-        setContentView(root);
+        setContentView(rootLayout);
+    }
 
-        SpinnerAdapter adapter = new SpinnerAdapter(this, "liquids.txt");
+    private void initComponents() {
+        // TODO: 13.11.2018 CHANGE THE SPINNER DROP DOWN STYLE
+        android.widget.SpinnerAdapter adapter = new com.example.hamlet.hw3.SpinnerAdapter(this, R.raw.liquids);
         drinkSpinner.setAdapter(adapter);
 
-        adapter = new SpinnerAdapter(this, "foods.txt");
+        adapter = new com.example.hamlet.hw3.SpinnerAdapter(this, R.raw.foods);
         foodSpinner.setAdapter(adapter);
 
         voteBtn.setOnClickListener(this);
         checkBtn.setOnClickListener(this);
         agreeRBtn.setOnCheckedChangeListener(this);
-    }
 
-    public static final String TAG = MainActivity.class.getName();
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        VoteManager.count = sharedPreferences.getInt("count", 0);
+    }
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-
-        init();
+    protected void onStop() {
+        super.onStop();
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putInt("count", VoteManager.count);
+        editor.commit();
     }
 
-    // TODO: 11/13/18 WRITE VOTE OBJECT TO THE FILE
     private void addVote() {
         String firstName = firstNameEditText.getText().toString();
         if(firstName.trim().isEmpty()){
@@ -172,11 +223,17 @@ public class MainActivity extends Activity implements View.OnClickListener, Radi
         }
 
         boolean willCome = agreeRBtn.isChecked();
-        int drink = drinkSpinner.getSelectedItemPosition();
-        int food = foodSpinner.getSelectedItemPosition();
-        voteManager.addVote(firstName, lastName, willCome, drink, food);
-        Toast.makeText(this, "Vote is accepted successfully", Toast.LENGTH_SHORT).show();
-        clearContent();
+        String drink = drinkSpinner.getSelectedItem().toString();
+        String food = foodSpinner.getSelectedItem().toString();
+        Vote vote = new Vote(firstName, lastName, willCome, drink, food);
+        try {
+            VoteManager.writeVote(this, vote);
+            Toast.makeText(this, "Vote is accepted successfully", Toast.LENGTH_SHORT).show();
+            clearContent();
+        } catch (IOException e) {
+            Toast.makeText(this, "Vote is not accepted!", Toast.LENGTH_SHORT).show();
+            e.printStackTrace();
+        }
     }
 
     private void clearContent() {
@@ -189,17 +246,15 @@ public class MainActivity extends Activity implements View.OnClickListener, Radi
 
     private void showVotes() {
         Intent intent = new Intent(this, VoteCheckActivity.class);
-        Bundle bundle = new Bundle();
-        bundle.putString("text", voteManager.votesToString());
-        intent.putExtras(bundle);
         startActivity(intent);
     }
 
     @Override
     public void onClick(View view) {
-        if(view.getId() == voteBtn.getId()){
+        Button btn = (Button) view;
+        if(btn == voteBtn){
             addVote();
-        }else if(view.getId() == checkBtn.getId()){
+        }else if(view == checkBtn){
             showVotes();
         }
     }

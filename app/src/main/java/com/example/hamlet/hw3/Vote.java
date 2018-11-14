@@ -1,13 +1,15 @@
 package com.example.hamlet.hw3;
 
-public class Vote {
+import java.io.Serializable;
+
+public class Vote implements Serializable {
     private String firstName;
     private String lastName;
     private boolean willCome;
-    private int drink;
-    private int food;
+    private String drink;
+    private String food;
 
-    public Vote(String firstName, String lastName, boolean willCome, int drink, int food) {
+    public Vote(String firstName, String lastName, boolean willCome, String drink, String food) {
         this.firstName = firstName;
         this.lastName = lastName;
         this.willCome = willCome;
@@ -39,19 +41,29 @@ public class Vote {
         this.willCome = willCome;
     }
 
-    public int getDrink() {
+    public String getDrink() {
         return drink;
     }
 
-    public void setDrink(int drink) {
+    public void setDrink(String drink) {
         this.drink = drink;
     }
 
-    public int getFood() {
+    public String getFood() {
         return food;
     }
 
-    public void setFood(int food) {
+    public void setFood(String food) {
         this.food = food;
+    }
+
+    @Override
+    public String toString() {
+        if (willCome) {
+            return String.format("-> %s %s will go to the party, and will drink %s and eat %s\n\n",
+                    firstName, lastName, drink, food);
+        }
+
+        return String.format("-> %s %s will not come\n\n", firstName, lastName);
     }
 }
